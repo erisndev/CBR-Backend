@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
+const { startRoomStatusScheduler } = require("./utils/roomStatusScheduler");
 
 // Load environment variables
 dotenv.config();
@@ -46,4 +47,6 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  // Start periodic room status synchronization
+  startRoomStatusScheduler({ intervalMs: 60 * 1000 }); // every 1 minute
 });

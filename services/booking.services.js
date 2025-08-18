@@ -25,15 +25,30 @@ const createBooking = async ({
     throw new Error("Room is not available for selected dates");
   }
 
+  // Normalize optional guestDetails fields to avoid enum/date validation issues
+  const normalizedGuestDetails = { ...(guestDetails || {}) };
+  if (!normalizedGuestDetails.gender) {
+    delete normalizedGuestDetails.gender;
+  }
+  if (
+    normalizedGuestDetails.dateOfBirth === "" ||
+    normalizedGuestDetails.dateOfBirth === null
+  ) {
+    delete normalizedGuestDetails.dateOfBirth;
+  }
+
   const booking = await Booking.create({
     room: roomId,
     checkIn,
     checkOut,
     guests,
-    guestDetails,
+    guestDetails: normalizedGuestDetails,
     totalPrice,
     status: "pending",
   });
+
+  // Mark room as booked
+  await Room.findByIdAndUpdate(roomId, { status: "booked" });
 
   return booking;
 };
@@ -45,10 +60,9 @@ const getBookingsByRoom = async (roomId) => {
 // ✅ New function to get all bookings
 const getAllBookings = async () => {
   return await Booking.find()
-    .populate("room")
     .populate({
       path: "room",
-      populate: { path: "type", model: "RoomType" },
+      populate: { path: "roomType", model: "RoomType" },
     });
 };
 
@@ -59,6 +73,17 @@ const cancelBooking = async (bookingId) => {
   }
   booking.status = "cancelled";
   await booking.save();
+
+  // If no other active bookings for this room in the future/overlapping, set room back to available
+  const hasActive = await Booking.exists({
+    room: booking.room,
+    status: { $in: ["pending", "paid"] },
+    _id: { $ne: booking._id },
+  });
+  if (!hasActive) {
+    await Room.findByIdAndUpdate(booking.room, { status: "available" });
+  }
+
   return booking;
 };
 
