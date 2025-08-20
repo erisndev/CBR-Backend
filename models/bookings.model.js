@@ -1,4 +1,3 @@
-// models/Booking.js
 const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema(
@@ -8,28 +7,22 @@ const bookingSchema = new mongoose.Schema(
       ref: "Room",
       required: true,
     },
-    checkIn: {
-      type: Date,
-      required: true,
-    },
-    checkOut: {
-      type: Date,
-      required: true,
-    },
+    checkIn: { type: Date, required: true },
+    checkOut: { type: Date, required: true },
+
+    // Store total guest count
     guests: {
       type: Number,
       default: 1,
       min: 1,
-      set: (v) => {
-        if (v && typeof v === "object") {
-          const adults = Number(v.adults || 0);
-          const children = Number(v.children || 0);
-          return adults + children || 1;
-        }
-        const n = Number(v);
-        return Number.isNaN(n) || n < 1 ? 1 : n;
-      },
     },
+
+    // Store breakdown (adults/children)
+    guestList: {
+      adults: { type: Number, default: 1, min: 0 },
+      children: { type: Number, default: 0, min: 0 },
+    },
+
     guestDetails: {
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
@@ -48,18 +41,19 @@ const bookingSchema = new mongoose.Schema(
       gender: {
         type: String,
         enum: ["Male", "Female", "Other", "Prefer not to say"],
+        required: false,
       },
       specialRequests: { type: String },
     },
-    totalPrice: {
-      type: Number,
-      required: true,
-    },
+
+    totalPrice: { type: Number, required: true },
+
     payment: {
       reference: { type: String },
       status: { type: String, enum: ["pending", "paid"], default: "pending" },
       paidAt: { type: Date },
     },
+
     status: {
       type: String,
       enum: ["pending", "paid", "cancelled"],
@@ -68,5 +62,15 @@ const bookingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to auto-calculate guests from guestList
+bookingSchema.pre("save", function (next) {
+  if (this.guestList) {
+    const adults = Number(this.guestList.adults || 0);
+    const children = Number(this.guestList.children || 0);
+    this.guests = adults + children || 1;
+  }
+  next();
+});
 
 module.exports = mongoose.model("Booking", bookingSchema);

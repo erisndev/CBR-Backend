@@ -1,85 +1,95 @@
-// services/bookingService.js
-
 const Booking = require("../models/bookings.model.js");
 const Room = require("../models/room.model.js");
-const RoomType = require("../models/roomtype.model.js");
+const crypto = require("crypto");
 
 const createBooking = async ({
   roomId,
   checkIn,
   checkOut,
   guests,
+  guestList, // 👈 new
   guestDetails,
   totalPrice,
 }) => {
-  // Check room availability first
+  // Generate unique payment reference
+  const paymentReference = `booking_${Date.now()}_${crypto
+    .randomBytes(4)
+    .toString("hex")}`;
+
+  // Normalize guestDetails (remove empty/null values)
+  const normalizedGuestDetails = { ...(guestDetails || {}) };
+  Object.keys(normalizedGuestDetails).forEach((key) => {
+    if (
+      normalizedGuestDetails[key] === "" ||
+      normalizedGuestDetails[key] == null
+    ) {
+      delete normalizedGuestDetails[key];
+    }
+  });
+
+  // Check room availability
   const existingBookings = await Booking.find({
     room: roomId,
     $or: [
       { checkIn: { $lt: new Date(checkOut), $gte: new Date(checkIn) } },
       { checkOut: { $gt: new Date(checkIn), $lte: new Date(checkOut) } },
     ],
+    status: { $in: ["pending", "paid"] },
   });
 
   if (existingBookings.length > 0) {
     throw new Error("Room is not available for selected dates");
   }
 
-  // Normalize optional guestDetails fields to avoid enum/date validation issues
-  const normalizedGuestDetails = { ...(guestDetails || {}) };
-  if (!normalizedGuestDetails.gender) {
-    delete normalizedGuestDetails.gender;
-  }
-  if (
-    normalizedGuestDetails.dateOfBirth === "" ||
-    normalizedGuestDetails.dateOfBirth === null
-  ) {
-    delete normalizedGuestDetails.dateOfBirth;
+  // Calculate guests (if guestList is provided, override guests count)
+  let totalGuests = guests || 1;
+  if (guestList) {
+    const adults = Number(guestList.adults || 0);
+    const children = Number(guestList.children || 0);
+    totalGuests = adults + children || 1;
   }
 
+  // Save booking
   const booking = await Booking.create({
     room: roomId,
     checkIn,
     checkOut,
-    guests,
+    guests: totalGuests,
+    guestList, // 👈 saves adults/children separately
     guestDetails: normalizedGuestDetails,
     totalPrice,
     status: "pending",
+    payment: {
+      reference: paymentReference,
+      status: "pending",
+    },
   });
 
-  // Mark room as booked
   await Room.findByIdAndUpdate(roomId, { status: "booked" });
 
   return booking;
 };
 
-const getBookingsByRoom = async (roomId) => {
-  return await Booking.find({ room: roomId }).populate("room");
-};
-
-// ✅ New function to get all bookings
 const getAllBookings = async () => {
-  return await Booking.find()
-    .populate({
-      path: "room",
-      populate: { path: "roomType", model: "RoomType" },
-    });
+  return await Booking.find().populate({
+    path: "room",
+    populate: { path: "roomType", model: "RoomType" },
+  });
 };
 
 const cancelBooking = async (bookingId) => {
   const booking = await Booking.findById(bookingId);
-  if (!booking) {
-    throw new Error("Booking not found");
-  }
+  if (!booking) throw new Error("Booking not found");
+
   booking.status = "cancelled";
   await booking.save();
 
-  // If no other active bookings for this room in the future/overlapping, set room back to available
   const hasActive = await Booking.exists({
     room: booking.room,
     status: { $in: ["pending", "paid"] },
     _id: { $ne: booking._id },
   });
+
   if (!hasActive) {
     await Room.findByIdAndUpdate(booking.room, { status: "available" });
   }
@@ -87,9 +97,28 @@ const cancelBooking = async (bookingId) => {
   return booking;
 };
 
+const getBookingById = async (bookingId) => {
+  return await Booking.findById(bookingId).populate({
+    path: "room",
+    populate: { path: "roomType", model: "RoomType" },
+  });
+};
+
+const getBookingByReference = async (reference) => {
+  try {
+    const booking = await Booking.findOne({
+      "payment.reference": reference,
+    }).populate("room");
+    return booking;
+  } catch (error) {
+    throw new Error("Failed to fetch booking: " + error.message);
+  }
+};
+
 module.exports = {
   createBooking,
-  getBookingsByRoom,
-  getAllBookings, // ✅ added
+  getAllBookings,
   cancelBooking,
+  getBookingById,
+  getBookingByReference,
 };

@@ -1,4 +1,3 @@
-// routes/bookingRoutes.js
 const express = require("express");
 const router = express.Router();
 const bookingController = require("../controllers/booking.controller.js");
@@ -16,9 +15,11 @@ router.post(
   validateRoomCapacity,
   bookingController.createBooking
 );
-router.post("/initialize-payment", bookingController.initializePayment);
 router.get("/verify-payment/:reference", bookingController.verifyPayment);
 router.delete("/cancel/:id", bookingController.cancelBooking);
 router.get("/", bookingController.getBookings);
+
+router.get("/:id", bookingController.getBookingById); // single by ID
+router.get("/ref/:reference", bookingController.getBookingByReference); // single by ref
 
 module.exports = router;

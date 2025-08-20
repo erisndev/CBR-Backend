@@ -26,7 +26,10 @@ const getAllRoomTypes = async (req, res) => {
 
 const updateRoomType = async (req, res) => {
   try {
-    console.log("Controller:updateRoomType called", { id: req.params.id, body: req.body });
+    console.log("Controller:updateRoomType called", {
+      id: req.params.id,
+      body: req.body,
+    });
     const updatedRoomType = await roomService.updateRoomType(
       req.params.id,
       req.body
@@ -55,8 +58,16 @@ const createRoomUnits = async (req, res) => {
 
 const getAvailableRooms = async (req, res) => {
   try {
-    const { roomTypeId, checkIn, checkOut, guests } = { ...req.query, ...req.body };
-    console.log("Controller:getAvailableRooms called", { roomTypeId, checkIn, checkOut, guests });
+    const { roomTypeId, checkIn, checkOut, guests } = {
+      ...req.query,
+      ...req.body,
+    };
+    console.log("Controller:getAvailableRooms called", {
+      roomTypeId,
+      checkIn,
+      checkOut,
+      guests,
+    });
     if (!checkIn || !checkOut)
       return res
         .status(400)
