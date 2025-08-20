@@ -16,7 +16,7 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: "process.env.FRONT_END_URL", // your frontend URL
+  origin: process.env.FRONT_END_URL, // your frontend URL
   credentials: true, // if you want to send cookies/auth headers
 };
 

@@ -115,10 +115,54 @@ const getBookingByReference = async (reference) => {
   }
 };
 
+// Mark booking as checked in
+const checkInBooking = async (bookingId) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  if (booking.status === "cancelled")
+    throw new Error("Cannot check in a cancelled booking");
+
+  if (booking.status === "checked_in")
+    throw new Error("Booking is already checked in");
+
+  // Update booking status
+  booking.status = "checked_in";
+  await booking.save();
+
+  // Update room status
+  await Room.findByIdAndUpdate(booking.room, { status: "checked_in" });
+
+  return booking;
+};
+
+// Mark booking as checked out
+const checkOutBooking = async (bookingId) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  if (booking.status === "cancelled")
+    throw new Error("Cannot check out a cancelled booking");
+
+  if (booking.status !== "checked_in")
+    throw new Error("Booking must be checked in first");
+
+  // Update booking status
+  booking.status = "checked_out";
+  await booking.save();
+
+  // Update room status to available
+  await Room.findByIdAndUpdate(booking.room, { status: "available" });
+
+  return booking;
+};
+
 module.exports = {
   createBooking,
   getAllBookings,
   cancelBooking,
   getBookingById,
   getBookingByReference,
+  checkInBooking,
+  checkOutBooking,
 };

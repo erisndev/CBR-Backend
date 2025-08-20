@@ -117,6 +117,28 @@ const getBookingByReference = async (req, res) => {
   }
 };
 
+// Mark a booking as checked in
+const checkInBooking = async (req, res) => {
+  try {
+    const { id } = req.params; // bookingId
+    const booking = await bookingService.checkInBooking(id);
+    res.json({ message: "Booking checked in", booking });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Mark a booking as checked out
+const checkOutBooking = async (req, res) => {
+  try {
+    const { id } = req.params; // bookingId
+    const booking = await bookingService.checkOutBooking(id);
+    res.json({ message: "Booking checked out, room now available", booking });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createBooking,
   verifyPayment,
@@ -124,4 +146,6 @@ module.exports = {
   getBookings,
   getBookingById,
   getBookingByReference,
+  checkInBooking,
+  checkOutBooking,
 };

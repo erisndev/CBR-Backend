@@ -22,4 +22,8 @@ router.get("/", bookingController.getBookings);
 router.get("/:id", bookingController.getBookingById); // single by ID
 router.get("/ref/:reference", bookingController.getBookingByReference); // single by ref
 
+// New check-in/check-out routes
+router.put("/check-in/:id", bookingController.checkInBooking);
+router.put("/check-out/:id", bookingController.checkOutBooking);
+
 module.exports = router;
