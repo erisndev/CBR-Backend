@@ -12,9 +12,7 @@ const createBooking = async ({
   totalPrice,
 }) => {
   // Generate unique payment reference
-  const paymentReference = `booking_${Date.now()}_${crypto
-    .randomBytes(4)
-    .toString("hex")}`;
+  const paymentReference = `CBR_${crypto.randomBytes(4).toString("hex")}`;
 
   // Normalize guestDetails (remove empty/null values)
   const normalizedGuestDetails = { ...(guestDetails || {}) };
