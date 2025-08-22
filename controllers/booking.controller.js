@@ -34,8 +34,17 @@ const createBooking = async (req, res) => {
       reference: booking.payment.reference,
     });
 
-    // Send confirmation email
-    await emailService.sendBookingConfirmation(booking);
+    // ✅ FIX: Populate room data before sending email
+    const populatedBooking = await Booking.findById(booking._id).populate({
+      path: "room",
+      populate: {
+        path: "roomType", // Assuming your Room model references RoomType
+        model: "RoomType",
+      },
+    });
+
+    // Send confirmation email with populated booking
+    await emailService.sendBookingConfirmation(populatedBooking);
 
     res.status(201).json({ booking, paymentData });
   } catch (error) {

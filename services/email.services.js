@@ -84,26 +84,39 @@ const sendBookingConfirmation = async (booking) => {
 
           <!-- Booking Details -->
           <div class="section">
-            <h2 class="section-title">Booking Details</h2>
-            <div class="info-grid">
-              <div class="info-card">
-                <h3>Stay Information</h3>
-                <div class="info-item"><span class="info-label">Room Type</span><span class="info-value">${
-                  room?.name || "N/A"
-                }</span></div>
-                <div class="info-item"><span class="info-label">Check In</span><span class="info-value">${new Date(
-                  checkIn
-                ).toLocaleDateString()}</span></div>
-                <div class="info-item"><span class="info-label">Check Out</span><span class="info-value">${new Date(
-                  checkOut
-                ).toLocaleDateString()}</span></div>
-                <div class="info-item"><span class="info-label">Duration</span><span class="info-value">${Math.ceil(
-                  (new Date(checkOut) - new Date(checkIn)) /
-                    (1000 * 60 * 60 * 24)
-                )} nights</span></div>
-              </div>
-            </div>
+      <h2 class="section-title">Booking Details</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Stay Information</h3>
+          <div class="info-item">
+            <span class="info-label">Room Type</span>
+            <span class="info-value">${
+              room?.roomType?.name ||
+              room?.type?.name ||
+              "Room information not available"
+            }</span>
           </div>
+          <div class="info-item">
+            <span class="info-label">Check In</span>
+            <span class="info-value">${new Date(
+              checkIn
+            ).toLocaleDateString()}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Check Out</span>
+            <span class="info-value">${new Date(
+              checkOut
+            ).toLocaleDateString()}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Duration</span>
+            <span class="info-value">${Math.ceil(
+              (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
+            )} nights</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
           <!-- Payment Summary -->
           <div class="section">
