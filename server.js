@@ -29,11 +29,13 @@ const roomRoutes = require("./routes/room.routes.js");
 const bookingRoutes = require("./routes/booking.routes.js");
 const adminRoutes = require("./routes/admin.routes.js");
 const availabilityRoutes = require("./routes/availability.routes.js");
+const newsletterRoutes = require("./routes/newsletter.routes.js");
 
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/availability", availabilityRoutes);
+app.use("/api/newsletters", newsletterRoutes);
 
 // Default route
 app.get("/", (req, res) => {
