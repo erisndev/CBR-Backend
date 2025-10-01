@@ -4,10 +4,16 @@ const mongoose = require("mongoose");
 const newsletterSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    date: { type: Date, required: true },
-    content: { type: String, required: true }, // HTML content
-    image: { type: String }, // Cloudinary URL
-    imageId: { type: String }, // Cloudinary public_id
+    publishDate: { type: Date, required: true },
+    coverImage: {
+      url: { type: String, required: true }, // Supabase URL for cover image
+      fileName: { type: String, required: true }, // Original filename
+    },
+    pdf: {
+      url: { type: String, required: true }, // Supabase URL for PDF
+      fileName: { type: String, required: true }, // Original filename
+    },
+    isPublished: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
